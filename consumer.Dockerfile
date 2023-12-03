@@ -7,13 +7,13 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy all Go files from pkg/rabbitmq and producer directories
+# Copy all Go files from pkg/rabbitmq and consumer directories
 COPY ./pkg/rabbitmq/*.go ./pkg/rabbitmq/
-COPY ./producer/*.go ./producer/
+COPY ./consumer/*.go ./consumer/
 
 # Build the Go application
-RUN go build -o /app/producer/producer ./producer
-RUN chmod +x /app/producer/producer
+RUN go build -o /app/consumer/bin ./consumer
+RUN chmod +x /app/consumer/bin
 
 # Final Stage
 FROM alpine:3.14
@@ -29,7 +29,7 @@ ENV RABBIT_PASSWORD=guest
 EXPOSE ${PORT}
 
 # Copy the built executable from the previous stage
-COPY --from=build /app/producer/producer /app/producer/
+COPY --from=build /app/consumer/bin /app/consumer/
 
 # Use CMD instead of ENTRYPOINT for flexibility
-CMD [ "/app/producer/producer" ]
+CMD [ "/app/consumer/bin" ]

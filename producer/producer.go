@@ -1,12 +1,12 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/FadyGamilM/gorabbitmq/pkg/rabbitmq"
 	"github.com/gin-gonic/gin"
 	"github.com/streadway/amqp"
 )
@@ -34,13 +34,13 @@ func main() {
 		Addr:    fmt.Sprintf("0.0.0.0:%v", api_port),
 	}
 
-	conn, err := NewRabbitMqConnection(rabbit_username, rabbit_password, rabbit_host, rabbit_port)
+	conn, err := rabbitmq.NewRabbitMqConnection(rabbit_username, rabbit_password, rabbit_host, rabbit_port)
 	HandleMainErrors(err, conn, nil)
 
-	ch, err := NewRabbitMqChannel(conn)
+	ch, err := rabbitmq.NewRabbitMqChannel(conn)
 	HandleMainErrors(err, conn, ch)
 
-	queue, err := NewQueue(ch, RabbitQueue{
+	queue, err := rabbitmq.NewQueue(ch, rabbitmq.RabbitQueue{
 		Name:             "publisher-queue",
 		Durable:          false,
 		DeleteWhenUnused: false,
@@ -87,52 +87,6 @@ func run(srv *http.Server) {
 	}
 }
 
-func NewRabbitMqConnection(username, password, host, port string) (*amqp.Connection, error) {
-	connString := "amqp://" + rabbit_username + ":" + rabbit_password + "@" + rabbit_host + ":" + rabbit_port + "/"
-	conn, err := amqp.Dial(connString)
-	if err != nil {
-		log.Printf("error trying to connect to rabbitmq ➜ %v", err)
-		return nil, err
-	}
-	if conn.IsClosed() {
-		return nil, errors.New("connection is closed")
-	}
-	return conn, nil
-}
-
-func NewRabbitMqChannel(conn *amqp.Connection) (*amqp.Channel, error) {
-	ch, err := conn.Channel()
-	if err != nil {
-		log.Printf("error trying to open a channel to the queue ➜ %v", err)
-		return nil, err
-	}
-	return ch, nil
-}
-
-type RabbitQueue struct {
-	Name             string
-	Durable          bool
-	DeleteWhenUnused bool
-	Exclusive        bool
-	NoWait           bool
-}
-
-func NewQueue(ch *amqp.Channel, queueSpecs RabbitQueue) (*amqp.Queue, error) {
-	q, err := ch.QueueDeclare(
-		queueSpecs.Name,
-		queueSpecs.Durable,
-		queueSpecs.DeleteWhenUnused,
-		queueSpecs.Exclusive,
-		queueSpecs.NoWait,
-		nil,
-	)
-	if err != nil {
-		log.Printf("error trying to create a queue ➜ %v", err)
-		return nil, err
-	}
-	return &q, nil
-}
-
 func submit(queue amqp.Queue, ch amqp.Channel, msg string) error {
 	err := ch.Publish(
 		"",
@@ -151,4 +105,48 @@ func submit(queue amqp.Queue, ch amqp.Channel, msg string) error {
 	return nil
 }
 
+// func NewRabbitMqConnection(username, password, host, port string) (*amqp.Connection, error) {
+// 	connString := "amqp://" + rabbit_username + ":" + rabbit_password + "@" + rabbit_host + ":" + rabbit_port + "/"
+// 	conn, err := amqp.Dial(connString)
+// 	if err != nil {
+// 		log.Printf("error trying to connect to rabbitmq ➜ %v", err)
+// 		return nil, err
+// 	}
+// 	if conn.IsClosed() {
+// 		return nil, errors.New("connection is closed")
+// 	}
+// 	return conn, nil
+// }
 
+// func NewRabbitMqChannel(conn *amqp.Connection) (*amqp.Channel, error) {
+// 	ch, err := conn.Channel()
+// 	if err != nil {
+// 		log.Printf("error trying to open a channel to the queue ➜ %v", err)
+// 		return nil, err
+// 	}
+// 	return ch, nil
+// }
+
+// type RabbitQueue struct {
+// 	Name             string
+// 	Durable          bool
+// 	DeleteWhenUnused bool
+// 	Exclusive        bool
+// 	NoWait           bool
+// }
+
+// func NewQueue(ch *amqp.Channel, queueSpecs RabbitQueue) (*amqp.Queue, error) {
+// 	q, err := ch.QueueDeclare(
+// 		queueSpecs.Name,
+// 		queueSpecs.Durable,
+// 		queueSpecs.DeleteWhenUnused,
+// 		queueSpecs.Exclusive,
+// 		queueSpecs.NoWait,
+// 		nil,
+// 	)
+// 	if err != nil {
+// 		log.Printf("error trying to create a queue ➜ %v", err)
+// 		return nil, err
+// 	}
+// 	return &q, nil
+// }

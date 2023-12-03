@@ -24,3 +24,11 @@ rabbit-build-producer:
 
 rabbit-producer:
 	docker run -it --rm --net rabbits -e RABBIT_HOST=rabbit-1 -e RABBIT_PORT=5672 -e RABBIT_USERNAME=guest -e RABBIT_PASSWORD=guest --name producer_api -p 9876:9876 $(producer_img):1.0 
+
+rabbit-build-consumer:
+	docker build -t $(consumer_img):1.0 -f consumer.Dockerfile .
+
+rabbit-consumer:
+	docker run -it --rm --net rabbits -e RABBIT_HOST=rabbit-1 -e RABBIT_PORT=5672 -e RABBIT_USERNAME=guest -e RABBIT_PASSWORD=guest --name consumer_service $(consumer_img):1.0 
+
+	
