@@ -1,3 +1,6 @@
+producer_img := producer
+consumer_img := consumer
+
 rabbit-network:
 	docker network create rabbits
 
@@ -12,5 +15,12 @@ rabbit-logs:
 
 rabbit-bash:
 	docker exec -it rabbit-1 bash
+# Then write this in the bash session 
+# $ rabbitmq-plugins enable rabbitmq_management
 
-	
+
+rabbit-build-producer:
+	docker build -t $(producer_img):1.0 -f producer.Dockerfile .
+
+rabbit-producer:
+	docker run -it --rm --net rabbits -e RABBIT_HOST=rabbit-1 -e RABBIT_PORT=5672 -e RABBIT_USERNAME=guest -e RABBIT_PASSWORD=guest --name producer_api -p 9876:9876 $(producer_img):1.0 
