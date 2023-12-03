@@ -34,3 +34,25 @@ rabbitmq-plugins enable rabbitmq_management
 
 # Theory 
 - Channel is a vritual connection to a specific queue 
+
+# Authentication between cluster nodes 
+once the container is running, execute the following <br>
+```bash
+docker exec -it $(host_name) cat /var/lib/rabbitmq/.erlang.cookie
+```
+and this will print the cookie for you so we can use it in our rabbitmq instances to talk to each others <br>
+
+- in order to form a cluster, we have to reset the node before joining the cluster 
+- so i will join all the nodes in node-1's cluster using the following commands <br>
+```bash
+    # stop_app will stop the process but keep container running 
+	docker exec -it rabbit-node-2 rabbitmqctl stop_app
+    # reset all data
+	docker exec -it rabbit-node-2 rabbitmqctl reset
+    # join the node1 cluster
+	docker exec -it rabbit-node-2 rabbitmqctl join_cluster rabbit@rabbit-1
+    # start the process again 
+	docker exec -it rabbit-node-2 rabbitmqctl start_app
+    # print new cluster info 
+	docker exec -it rabbit-node-2 rabbitmqctl cluster_status
+```
